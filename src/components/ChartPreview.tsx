@@ -17,12 +17,23 @@ import {
 } from "recharts";
 import type { ChartConfig } from "./types";
 
+let measureCanvas: HTMLCanvasElement | null = null;
+function measureTextWidth(text: string, font: string): number {
+  if (typeof document === "undefined") return text.length * 6.5;
+  if (!measureCanvas) measureCanvas = document.createElement("canvas");
+  const ctx = measureCanvas.getContext("2d");
+  if (!ctx) return text.length * 6.5;
+  ctx.font = font;
+  return ctx.measureText(text).width;
+}
+
 export function ChartPreview({ config }: { config: ChartConfig }) {
   const { title, subtitle, unit, chartType, items, barColor, bgColor, textColor, gridColor, refLines } = config;
 
   const data = items.map((it) => ({ label: it.label, value: Number(it.value) || 0 }));
-  const maxLabelLen = Math.max(...items.map((i) => i.label.length), 10);
-  const leftMargin = chartType === "bar-h" ? Math.min(280, maxLabelLen * 8 + 20) : 40;
+  const labelFont = '12px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+  const maxLabelWidth = Math.max(...items.map((i) => measureTextWidth(i.label, labelFont)), 60);
+  const leftMargin = chartType === "bar-h" ? Math.min(280, Math.ceil(maxLabelWidth) + 18) : 40;
 
   const axisTick = { fill: textColor, fontSize: 12 };
   const mutedTick = { fill: "#9a9a9a", fontSize: 12 };
